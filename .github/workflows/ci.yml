@@ -1,0 +1,48 @@
+name: CI - train and save model
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  # name what we like
+  matrix-pip:
+    name: Train and save the model
+    runs-on: ubuntu-latest
+
+    strategy:
+      # to run with multiple python versions we use matrix
+      # if only one version no need matrix
+      matrix:
+        python-version: ["3.9", "3.10", "3.11"]
+
+    steps:
+      - name: checkout
+        uses: actions/checkout@v4
+        # instead of writing manually shell script for git clone <url> this is much faster and better
+
+      - name: setup python
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: update pip
+        run: python -m pip install --upgrade pip setuptools wheel
+
+      - name: Install project dependencies
+        run: |
+          uv init
+          uv add -r requirements.txt
+
+      - name: train the model
+        run: |
+          python train.py
+          ls -la artifacts
+
+      - name: upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: ml-artifacts-${{ matrix.python-version }}-${{ github.run_id }}
+          path: artifacts/
