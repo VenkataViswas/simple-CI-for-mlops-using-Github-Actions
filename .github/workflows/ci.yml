@@ -28,20 +28,11 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
 
-      - name: update pip
-        run: python -m pip install --upgrade pip setuptools wheel
+      - name: install uv
+        run: pip install uv
 
-      - name: Install project dependencies
-        run: pip install -r requirements.txt
+      - name: sync dependencies
+        run: uv sync
 
       - name: train the model
-        run: |
-          python train.py
-          ls -la
-          ls -la artifacts
-
-      - name: upload artifacts
-        uses: actions/upload-artifact@v4
-        with:
-          name: ml-artifacts-${{ matrix.python-version }}-${{ github.run_id }}
-          path: artifacts/
+        run: uv run python train.py
